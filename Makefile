@@ -1,19 +1,29 @@
-postgres:
-	docker run --name postgres12-shop-dev -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:12-alpine
+pull:
+	docker pull mysql:5.7.40
+
+mysql:
+	docker run --name mysql-letsGo -p 3306:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:5.7.40
+
+rmmysql:
+	docker stop mysql-letsGo
+	docker rm mysql-letsGo
 
 createdb:
-	docker exec -it postgres12-shop-dev createdb --username=root --owner=root shop_dev 
+	docker exec -it mysql-letsGo sh -c "mysql -u root -p'secret' -e 'CREATE DATABASE snippetbox CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'"
 
 dropdb:
-	docker exec -it postgres12-shop-dev dropdb shop_dev
+	docker exec -it mysql-letsGo sh -c "mysql -u root -p'secret' -e 'DROP DATABASE snippetbox;'"
+
+showdb:
+	docker exec -it mysql-letsGo sh -c "mysql -u root -p'secret' -e 'SHOW DATABASES;'"
 
 migrateup:
-	migrate -path internal/models/migration -database "postgresql://root:secret@localhost:5432/shop_dev?sslmode=disable" -verbose up
+	migrate -path internal/models/migration -database "mysql://root:secret@tcp(localhost:3306)/snippetbox?x-tls-insecure-skip-verify=false" -verbose up
 
 migratedown:
-	migrate -path internal/models/migration -database "postgresql://root:secret@localhost:5432/shop_dev?sslmode=disable" -verbose down
+	migrate -path internal/models/migration -database "mysql://root:secret@tcp(localhost:3306)/snippetbox?x-tls-insecure-skip-verify=false" -verbose down
 
 server:
 	go run ./cmd/web
 
-.PHONY: postgres createdb dropdb migrateup migratedown server
+.PHONY: pull mysql rmmysql createdb dropdb migrateup migratedown server
