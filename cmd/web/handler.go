@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"text/template"
 
 	"github.com/maxwellkuo47/snippetbox/internal/models"
 )
@@ -21,26 +20,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-
-	for _, snippet := range snippets {
-		fmt.Fprintf(w, "%+v", snippet)
-	}
-
-	// files := []string{
-	// 	"./ui/html/base.tmpl",
-	// 	"./ui/html/partials/nav.tmpl",
-	// 	"./ui/html/pages/home.tmpl",
-	// }
-	// ts, err := template.ParseFiles(files...)
-	// if err != nil {
-	// 	app.serverError(w, err)
-	// 	return
-	// }
-	// err = ts.ExecuteTemplate(w, "base", nil)
-	// if err != nil {
-	// 	app.serverError(w, err)
-	// 	return
-	//}
+	data := app.newTemplateData(r)
+	data.Snippets = snippets
+	app.render(w, http.StatusOK, "home", data)
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
@@ -59,26 +41,9 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
-	files := []string{
-		"./ui/html/base.tmpl",
-		"./ui/html/partials/nav.tmpl",
-		"./ui/html/pages/view.tmpl",
-	}
-
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-	}
-
-	data := &templateData{
-		Snippet: snippet,
-	}
-
-	err = ts.ExecuteTemplate(w, "base", data)
-	if err != nil {
-		app.serverError(w, err)
-	}
+	data := app.newTemplateData(r)
+	data.Snippet = snippet
+	app.render(w, http.StatusOK, "view", data)
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
