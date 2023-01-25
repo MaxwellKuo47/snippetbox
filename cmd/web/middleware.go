@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
 )
 
 func secureHeaders(next http.Handler) http.Handler {
@@ -19,8 +20,11 @@ func secureHeaders(next http.Handler) http.Handler {
 
 func (app *application) logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		app.infoLog.Printf("%s - %s %s %s \n\t\t\t===>%s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI(), r.UserAgent())
+		t := time.Now()
 		next.ServeHTTP(w, r)
+		usingTime := time.Since(t)
+		app.infoLog.Printf("%s - %s %s %s - %v", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI(), usingTime)
+
 	})
 }
 
